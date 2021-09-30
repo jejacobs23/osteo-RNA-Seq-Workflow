@@ -28,8 +28,8 @@ gunzip Homo_sapiens.GRCh38.102.gtf.gz
 **Step 2) Generate the STAR genome index files:** STAR run with the "GenomeGenerate" mode will take the user supplied reference geneome sequences (FASTA files) and annotations (GTF file) and generate genome indexes that are utilized in the mapping step.  The genome indexes are saved to disk and need only be generated once for each genome/annotation combination.
 ```
 GENOME_DIR=<path to directory where you want the STAR index files to be saved>
-FASTA=<>"/Homo_sapiens.GRCh38.dna.toplevel.fa"
-GTF=<>"/Homo_sapiens.GRCh38.102.gtf"
+FASTA=<path to directory containing the hg38 genome files downloaded in Step 1>"/Homo_sapiens.GRCh38.dna.toplevel.fa"
+GTF=<path to directory containing the hg38 genome files downloaded in Step 1>"/Homo_sapiens.GRCh38.102.gtf"
 
 STAR \
     --runThreadN 32 \
