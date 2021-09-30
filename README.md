@@ -4,7 +4,7 @@ Workflow for estimating gene expression in osteosarcoma RNA sequencing (RNA-Seq)
 # Version Notes
 - These analyses were carried out on the OHSU cluster computing system (Exacloud) using CentOS 7.7.1908 unless otherwise noted
 - Exacloud uses the job scheduler, Slurm, for job submissions.  See separate files for Slurm submit scripts.
-- Alignment of sequencing reads was accomplished using the STAR Aligner.  The version used was 
+- Alignment of sequencing reads was accomplished using the STAR Aligner.  The version used was 2.7.6a
 - GATK version 4.0.12.0 (Picard included)
 - All Python scripts were run on Python version 2.7.13 unless otherwise noted.  
 
@@ -24,4 +24,18 @@ Both files were then unzipped as follows:
 ```
 gunzip Homo_sapiens.GRCh38.dna.toplevel.fa.gz
 gunzip Homo_sapiens.GRCh38.102.gtf.gz
+```
+**Step 2) Generate the STAR genome index files:** STAR run with the "GenomeGenerate" mode will take the user supplied reference geneome sequences (FASTA files) and annotations (GTF file) and generate genome indexes that are utilized in the mapping step.  The genome indexes are saved to disk and need only be generated once for each genome/annotation combination.
+```
+GENOME_DIR=<path to directory where you want the STAR index files to be saved>
+FASTA=<>"/Homo_sapiens.GRCh38.dna.toplevel.fa"
+GTF=<>"/Homo_sapiens.GRCh38.102.gtf"
+
+STAR \
+    --runThreadN 32 \
+    --runMode genomeGenerate \
+    --limitGenomeGenerateRAM 170000000000 \
+    --genomeDir $GENOME_DIR \
+    --genomeFastaFiles $FASTA \
+    --sjdbGTFfile $GTF \
 ```
