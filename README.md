@@ -112,11 +112,11 @@ java -Xmx8G -jar picard.jar SamToFastq \
 The "PE" tells trimmomatic to run in Paired End Mode
 
 The "trimlog file" creates a log of all read trimmings, indicating the following details:
-    - The read name
-    - The surviving sequence length
-    - The location of the first surviving base, aka, the amount trimmed from the start
-    - The location of the last surviving base in the original read
-    - The amount trimmed from the end
+- The read name
+- The surviving sequence length
+- The location of the first surviving base, aka, the amount trimmed from the start
+- The location of the last surviving base in the original read
+- The amount trimmed from the end
 
 The "-phred33" option tells Trimmomatic to use phred33 instead of phred64.  Most newer sequencing data is phred33.  If you see symbols like #, !, $, % or any numbers, you know you've got phred33.
 
