@@ -39,11 +39,11 @@ STAR \
     --genomeFastaFiles $FASTA \
     --sjdbGTFfile $GTF \
 ```
-**Step 3) :** The Picard function, RevertSam, is ued to take an aligned .bam file and remove alignment information in order to generate an unmapped BAM (uBAM). Details on this part of the workflow can be found in the GATK Tutorial #6484: (How to) Generate an unmapped BAM from FASTQ or aligned BAM. 
+**Step 3) Revert .bam files:** The downloaded osteo RNA-Seq files have already been processed and aligned. In order to use your own analysis workflow, the files first must be reverted back to their pre-processed and unmapped form. To accomplish this, we first use the Picard function, RevertSam, to take an aligned .bam file and remove alignment information in order to generate an unmapped BAM (uBAM). Details on this part of the workflow can be found in the GATK Tutorial #6484: (How to) Generate an unmapped BAM from FASTQ or aligned BAM. 
 https://gatkforums.broadinstitute.org/gatk/discussion/6484#latest#top
 It removes alignment information and any recalibrated base quality information.  It makes it possible to re-analyze the file using your own pipeline.
 
-Standard tags cleared by default are NM, UQ, PG, MD, MQ, SA, MC and AS.  Additionally, the OQ tag is removed by the default "RESTORE_ORIGINAL_QUALITIES" parameter.  Any nonstandard tags should be removed.  To list all tags within a BAM, use the command: samtools view input.bam | cut -f 12- | tr '\t' '\n' | cut -d ':' -f 1 | awk '{ if(!x[$1]++) { print }}' You should leave the RG tag.
+Standard tags cleared by default are NM, UQ, PG, MD, MQ, SA, MC and AS.  Additionally, the OQ tag is removed by the default "RESTORE_ORIGINAL_QUALITIES" parameter.  Any nonstandard tags should be removed.  To list all tags within a BAM, use the command: `samtools view input.bam | cut -f 12- | tr '\t' '\n' | cut -d ':' -f 1 | awk '{ if(!x[$1]++) { print }}'` You should leave the RG tag.
 
 The "SANITIZE" option removes reads that cause problems for certain tools such as MarkIlluminaAdapters. It removeds paired reads with missing mates, duplicate records and records with mismatches in length of bases and qualities.
 
@@ -69,24 +69,22 @@ java -Xmx8G -jar picard.jar RevertSam \
     REMOVE_ALIGNMENT_INFORMATION=true \
     TMP_DIR=<path to temp directory>/working_temp_rs
 ```
-**Step 4) :** The Picard function, MarkIllumiaAdapters, is used to take an uBAM file and rewite it with new adapter-trimming tags.  Per tutorial 6483 on the GATK website: https://software.broadinstitute.org/gatk/documentation/article?id=6483 This is needed so that the sequenced adapters contribute minimally to the alignments.  The tool adds an "XT" tag to a read record to mark the 5' start position of the specified adapter sequence.  It also produces a metrics file.
+**Step 4) Mark adapters:** The Picard function, MarkIllumiaAdapters, is used to take an uBAM file and rewite it with new adapter-trimming tags.  Per tutorial 6483 on the GATK website: https://software.broadinstitute.org/gatk/documentation/article?id=6483 This is needed so that the sequenced adapters contribute minimally to the alignments.  The tool adds an "XT" tag to a read record to mark the 5' start position of the specified adapter sequence.  It also produces a metrics file.
 ```
 #for n lanes
-#The input files are the .bam files created in Step .  There are the same number of input .bam files as there are lanes.  
+#The input files are the .bam files created in Step 3.  There are the same number of input .bam files as there are lanes.  
 
 ALIGNMENT_RUN=<Sample ID>
-INPUT=<path to input directory>"/"$ALIGNMENT_RUN"/"<name of .bam file created in step >
+INPUT=<path to input directory>"/"$ALIGNMENT_RUN"/"<name of .bam file created in step 3>
 OUTPUT_DIR=<path to output directory>"/"$ALIGNMENT_RUN
 
-java -Xmx8G -jar $PICARD_DIR/picard.jar MarkIlluminaAdapters \
+java -Xmx8G -jar picard.jar MarkIlluminaAdapters \
     I=$INPUT \
     O=$OUTPUT_DIR/uBAM_markedAdapters_lane_<n>.bam \
     M=$OUTPUT_DIR/adapter_metrics_lane_<n>.txt \
     TMP_DIR=<path to temp directory>/working_temp_miat
 ```
-
-
-**Step 5) :** The Picard function, SamToFastq, is used to take the uBAM files which have been modifed so that Illumina adapter sequences are marked with the XT tag and converts them to fastq files for further processing.  It produces a .fastq file in which all extant meta data (read group info, alignment info, flags and tags) are purged.  What remains are the read query names prefaced with the @ symbol, read sequences and read base quality scores.  The meta data will be added back later in the MergeBam step.  GATK actually pipes this along with the BWA alignment step and the MergeBam step but I'm still working on piping with Slurm. See Tutorial 6483 for details: 
+**Step 5) Convert uBAM to FASTQ:** The Picard function, SamToFastq, is used to take the uBAM files which have been modifed so that Illumina adapter sequences are marked with the XT tag and converts them to fastq files for further processing.  It produces a .fastq file in which all extant meta data (read group info, alignment info, flags and tags) are purged.  What remains are the read query names prefaced with the @ symbol, read sequences and read base quality scores.  The meta data will be added back later in the MergeBam step.  GATK actually pipes this along with the BWA alignment step and the MergeBam step but I'm still working on piping with Slurm. See Tutorial 6483 for details: 
 https://software.broadinstitute.org/gatk/documentation/article?id=6483
 
 By setting the CLIPPING_ATTRIBUTE to "XT" and by setting the CLIPPING_ACTION to 2, the program effectively removes the previously marked adapter sequences by changing their quality scores to two.  This makes it so they don't contribute to downstream read alignment or alignment scoring metrics.
@@ -108,3 +106,4 @@ java -Xmx8G -jar picard.jar SamToFastq \
     NON_PF=true \
     TMP_DIR=<path to temp directory>/working_temp_stf
 ```
+**Step 6) :**
