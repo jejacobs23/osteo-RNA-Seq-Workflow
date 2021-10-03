@@ -5,6 +5,7 @@ Workflow for estimating gene expression in osteosarcoma RNA sequencing (RNA-Seq)
 - These analyses were carried out on the OHSU cluster computing system (Exacloud) using CentOS 7.7.1908 unless otherwise noted
 - Exacloud uses the job scheduler, Slurm, for job submissions.  See separate files for Slurm submit scripts.
 - Alignment of sequencing reads was accomplished using the STAR Aligner.  The version used was 2.7.6a
+- Trimmomatic version 0.39
 - GATK version 4.0.12.0 (Picard included)
 - All Python scripts were run on Python version 2.7.13 unless otherwise noted.  
 
@@ -106,4 +107,46 @@ java -Xmx8G -jar picard.jar SamToFastq \
     NON_PF=true \
     TMP_DIR=<path to temp directory>/working_temp_stf
 ```
-**Step 6) :**
+**Step 6) Trim adapter sequences prior to alignment:** Trimmomatic is a flexibel read trimming tool for Illumina NGS data.  It performs a variety of useful trimming tasks for illumina paired-end and single ended data. See: http://www.usadellab.org/cms/?page=trimmomatic
+
+The "PE" tells trimmomatic to run in Paired End Mode
+
+The "trimlog file" creates a log of all read trimmings, indicating the following details:
+    - The read name
+    - The surviving sequence length
+    - The location of the first surviving base, aka, the amount trimmed from the start
+    - The location of the last surviving base in the original read
+    - The amount trimmed from the end
+
+The "-phred33" option tells Trimmomatic to use phred33 instead of phred64.  Most newer sequencing data is phred33.  If you see symbols like #, !, $, % or any numbers, you know you've got phred33.
+
+For paired-end data, two input filres are specified, and 4 output files, 2 for the 'paired' output where both reads survivied the processing and 2 for corresponding 'unpaired' output where a read survivied, but the partner read did not.
+
+The "ILLUMINACLIP" command cuts adapter and other illumina sequences from the read. The numbers following "ILLUMINACLIP" are as followes - :2:30:12, which means 2 seed mismatches:30 palindrome clip threshold: 12 simple clip threshold.
+```
+#For n lanes
+
+ALIGNMENT_RUN=<Sample ID>
+ADAPTERS=<path to Trimmomatic adapters directory>"/TruSeq3-PE.fa"
+WORKING_DIR=<path to input directory>"/"$ALIGNMENT_RUN
+TRIMLOG=$WORKING_DIR"/Trimlog.txt"
+
+INPUT1=$WORKING_DIR"/R1_lane_<n>.fastq"
+INPUT2=$WORKING_DIR"/R2_lane_<n>.fastq"
+OUTPUT1=$WORKING_DIR"/R1_0<n>.IlluminaAdapterTrimming.fastq.gz"
+OUTPUT2=$WORKING_DIR"/R1_0<n>.IlluminaAdapterTrimming.unpaired1.fastq.gz"
+OUTPUT3=$WORKING_DIR"/R2_0<n>.IlluminaAdapterTrimming.fastq.gz"
+OUTPUT4=$WORKING_DIR"/R2_0<n>.IlluminaAdapterTrimming.unpaired1.fastq.gz"
+
+java -Xmx48g -Xms48g -Xss2m -jar trimmomatic-0.39.jar PE \
+    -trimlog $TRIMLOG \
+    -phred33 \
+    -threads 7 \
+    $INPUT1 \
+    $INPUT2 \
+    $OUTPUT1 \
+    $OUTPUT2 \
+    $OUTPUT3 \
+    $OUTPUT4 \
+    ILLUMINACLIP:$ADAPTERS:2:30:12
+```
