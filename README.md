@@ -150,10 +150,13 @@ java -Xmx48g -Xms48g -Xss2m -jar trimmomatic-0.39.jar PE \
     $OUTPUT4 \
     ILLUMINACLIP:$ADAPTERS:2:30:12
 ```
-**Step 7) :**
-
+**Step 7) Combine lanes prior to STAR alignment:**
 ```
+ALIGNMENT_RUN=<Sample ID>
+WORKING_DIR=<path to input directory>"/"$ALIGNMENT_RUN
 
+cat $WORKING_DIR/R1_*.IlluminaAdapterTrimming.fastq.gz > $WORKING_DIR/R1_all_lanes.fastq.gz
+cat $WORKING_DIR/R2_*.IlluminaAdapterTrimming.fastq.gz > $WORKING_DIR/R2_all_lanes.fastq.gz
 ```
 **Step 8) Align reads with STAR:** 
 The "quantMode GeneCounts" option will count the number of reads per gene while mapping. A read is counted if it overlaps (1nt or more one and only one gene.  Both ends of the paired-end read are checked for overlaps.  This requires annotations (GTF with -sjdbGTFfile option) used at the genome generation step or at the mapping step.  STAR outputs read counts per gene into ReadsPerGene.out.tab file with 4 columns which correspond to different strandedness options
@@ -171,8 +174,8 @@ Note, STAR first aligns reads to the entire genome, and only then searches for c
 ```
 ALIGNMENT_RUN=<Sample ID>
 INDEX=<path to directory containing the STAR index files created in Step 2>
-INFILE1=<path to input directory>"/"$ALIGNMENT_RUN"/R1_01.IlluminaAdapterTrimming.fastq.gz"
-INFILE2=<path to input directory>"/"$ALIGNMENT_RUN"/R2_01.IlluminaAdapterTrimming.fastq.gz"
+INFILE1=<path to input directory>"/"$ALIGNMENT_RUN"/R1_all_lanes.fastq.gz"
+INFILE2=<path to input directory>"/"$ALIGNMENT_RUN"/R2_all_lanes.fastq.gz"
 OUT_FILE=<path to output directory>"/"$ALIGNMENT_RUN"/STAR_aligned"
 
 STAR \
