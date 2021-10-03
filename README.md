@@ -70,7 +70,7 @@ java -Xmx8G -jar picard.jar RevertSam \
     REMOVE_ALIGNMENT_INFORMATION=true \
     TMP_DIR=<path to temp directory>/working_temp_rs
 ```
-**Step 4) Mark adapters:** The Picard function, MarkIllumiaAdapters, is used to take an uBAM file and rewite it with new adapter-trimming tags.  Per tutorial 6483 on the GATK website: https://software.broadinstitute.org/gatk/documentation/article?id=6483 This is needed so that the sequenced adapters contribute minimally to the alignments.  The tool adds an "XT" tag to a read record to mark the 5' start position of the specified adapter sequence.  It also produces a metrics file.
+**Step 4) Mark adapters:** The Picard function, MarkIllumiaAdapters, is used to take an uBAM file and rewrite it with new adapter-trimming tags.  Per tutorial 6483 on the GATK website: https://software.broadinstitute.org/gatk/documentation/article?id=6483 This is needed so that the sequenced adapters contribute minimally to the alignments.  The tool adds an "XT" tag to a read record to mark the 5' start position of the specified adapter sequence.  It also produces a metrics file.
 ```
 #for n lanes
 #The input files are the .bam files created in Step 3.  There are the same number of input .bam files as there are lanes.  
@@ -155,7 +155,7 @@ java -Xmx48g -Xms48g -Xss2m -jar trimmomatic-0.39.jar PE \
 ```
 
 ```
-**Step 8) :** 
+**Step 8) Align reads with STAR:** 
 The "quantMode GeneCounts" option will count the number of reads per gene while mapping. A read is counted if it overlaps (1nt or more one and only one gene.  Both ends of the paired-end read are checked for overlaps.  This requires annotations (GTF with -sjdbGTFfile option) used at the genome generation step or at the mapping step.  STAR outputs read counts per gene into ReadsPerGene.out.tab file with 4 columns which correspond to different strandedness options
 - column 1: gene ID
 - column 2: counts for unstranded RNA-seq
@@ -170,7 +170,7 @@ The "--quantMode TranscriptomeSAM" options tells STAR to output alignments trans
 Note, STAR first aligns reads to the entire genome, and only then searches for concordance between alignments and transcripts.  This approach offers certain advantages compared to the alignment to transcriptome only by not forcing the alignments to annotate transcripts. Using "--quantMode TranscriptomeSAM GeneCounts" will output both the Aligned.toTranscriptome.out.bam and the ReadsPreGene.out.tab outputs.
 ```
 ALIGNMENT_RUN=<Sample ID>
-INDEX=<>"/hg38_osteo_ensembl"
+INDEX=<path to directory containing the STAR index files created in Step 2>
 INFILE1=<path to input directory>"/"$ALIGNMENT_RUN"/R1_01.IlluminaAdapterTrimming.fastq.gz"
 INFILE2=<path to input directory>"/"$ALIGNMENT_RUN"/R2_01.IlluminaAdapterTrimming.fastq.gz"
 OUT_FILE=<path to output directory>"/"$ALIGNMENT_RUN"/STAR_aligned"
