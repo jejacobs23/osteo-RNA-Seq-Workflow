@@ -150,3 +150,43 @@ java -Xmx48g -Xms48g -Xss2m -jar trimmomatic-0.39.jar PE \
     $OUTPUT4 \
     ILLUMINACLIP:$ADAPTERS:2:30:12
 ```
+**Step 7) :**
+
+```
+
+```
+**Step 8) :** 
+The "quantMode GeneCounts" option will count the number of reads per gene while mapping. A read is counted if it overlaps (1nt or more one and only one gene.  Both ends of the paired-end read are checked for overlaps.  This requires annotations (GTF with -sjdbGTFfile option) used at the genome generation step or at the mapping step.  STAR outputs read counts per gene into ReadsPerGene.out.tab file with 4 columns which correspond to different strandedness options
+- column 1: gene ID
+- column 2: counts for unstranded RNA-seq
+- column 3: counts for the 1st read strand aligned with RNA (htseq-count option -s yes)
+- column 4: counts for the 2nd read strand aligned with RNA (htseq-count option -s reverse)
+
+The "--quantMode TranscriptomeSAM" options tells STAR to output alignments translated into transcript coordinates in the Aligned.toTranscriptome.out.bam file (in addition to alignmgnets in genomic coordinates in Aligned.sam/bam files).  These transcriptomic alignments can be used with various transcript quantification software that require reads to be mapped to transcriptome, such as RSEM or eXpress.  For example, RSEM command line would look like this:
+```
+    rsem-calculate-expression . . . --bam Aligned.toTranscriptome.out.bam
+    /path/to/RSEM/reference RSEM
+```
+Note, STAR first aligns reads to the entire genome, and only then searches for concordance between alignments and transcripts.  This approach offers certain advantages compared to the alignment to transcriptome only by not forcing the alignments to annotate transcripts. Using "--quantMode TranscriptomeSAM GeneCounts" will output both the Aligned.toTranscriptome.out.bam and the ReadsPreGene.out.tab outputs.
+```
+ALIGNMENT_RUN=<Sample ID>
+INDEX=<>"/hg38_osteo_ensembl"
+INFILE1=<path to input directory>"/"$ALIGNMENT_RUN"/R1_01.IlluminaAdapterTrimming.fastq.gz"
+INFILE2=<path to input directory>"/"$ALIGNMENT_RUN"/R2_01.IlluminaAdapterTrimming.fastq.gz"
+OUT_FILE=<path to output directory>"/"$ALIGNMENT_RUN"/STAR_aligned"
+
+STAR \
+    --outSAMtype BAM SortedByCoordinate \
+    --outBAMcompression 6 \
+    --outSAMunmapped None \
+    --genomeDir $INDEX \
+    --twopassMode Basic \
+    --outFileNamePrefix $OUT_FILE \
+    --outReadsUnmapped Fastq \
+    --readFilesIn $INFILE1 $INFILE2 \
+    --readFilesCommand zcat \
+    --outSAMattributes All \
+    --outFilterMultimapNmax 10 \
+    --quantMode TranscriptomeSAM GeneCounts \
+    --runThreadN 12
+```
