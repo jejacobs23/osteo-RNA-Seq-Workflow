@@ -1,5 +1,5 @@
 # osteo-RNA-Seq-Workflow
-Workflow for estimating gene expression in osteosarcoma RNA sequencing (RNA-Seq) samples
+Workflow for estimating gene expression in osteosarcoma RNA sequencing (RNA-Seq) samples, and identifying differentially expressed genes between different groups of samples (in this case, samples with and without nuclear envelope or nuclear pore complex pathway aberrations).  
 
 # Version Notes
 - These analyses were carried out on the OHSU cluster computing system (Exacloud) using CentOS 7.7.1908 unless otherwise noted
