@@ -242,4 +242,5 @@ rsem-calculate-expression \
     $OUTPUT_PREFIX
 ```
 **Step 11) Prepare gene count data to be inputed into DESeq2:**  The data from the STAR alignment step will be prepared for input into DESeq2 using the Python program, DESeq2_input.py.  
+
 **Step 12) Identify differentially expressed genes between samples with and without nuclear envelope or nuclear pore complex pathway aberrations:**  The R program, DESeq2_Analysis.R, is used to identify differentially expressed genes using DESeq2.  
