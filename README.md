@@ -7,8 +7,10 @@ Workflow for estimating gene expression in osteosarcoma RNA sequencing (RNA-Seq)
 - Alignment of sequencing reads was accomplished using the STAR Aligner.  The version used was 2.7.6a
 - Trimmomatic version 0.39
 - RSEM version 1.3.3
+- DESeq2 version 1.28.1
 - GATK version 4.0.12.0 (Picard included)
 - All Python scripts were run on Python version 2.7.13 unless otherwise noted.  
+- All R scripts were run on R version 4.0.2 unless otherwise noted.  
 
 # Workflow
 **Notes:**
