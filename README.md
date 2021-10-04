@@ -6,6 +6,7 @@ Workflow for estimating gene expression in osteosarcoma RNA sequencing (RNA-Seq)
 - Exacloud uses the job scheduler, Slurm, for job submissions.  See separate files for Slurm submit scripts.
 - Alignment of sequencing reads was accomplished using the STAR Aligner.  The version used was 2.7.6a
 - Trimmomatic version 0.39
+- RSEM version 1.3.3
 - GATK version 4.0.12.0 (Picard included)
 - All Python scripts were run on Python version 2.7.13 unless otherwise noted.  
 
@@ -40,7 +41,25 @@ STAR \
     --genomeFastaFiles $FASTA \
     --sjdbGTFfile $GTF \
 ```
-**Step 3) Revert .bam files:** The downloaded osteo RNA-Seq files have already been processed and aligned. In order to use your own analysis workflow, the files first must be reverted back to their pre-processed and unmapped form. To accomplish this, we first use the Picard function, RevertSam, to take an aligned .bam file and remove alignment information in order to generate an unmapped BAM (uBAM). Details on this part of the workflow can be found in the GATK Tutorial #6484: (How to) Generate an unmapped BAM from FASTQ or aligned BAM. 
+**Step 3) Generate the RSEM index files:** 
+RSEM (RNA-Seq by Expectation Maximization) is a program for estimating gene and isoform expression levels from RNA-Seq data.  See https://github.com/deweylab/RSEM for details.
+
+RSEM can extract reference transcripts from a genome if you provide it with gene annotations in a GTF/GFF file.  Alternatively, you can provide RSEM with transcript sequences directly.
+
+The reference_fasta_file(s) is provided as either a comma-separated list of Multi-FASTA formatted files OR a directory name.  If a directory name is specified, RSEM will read all files with suffix .fa or .fasta in this directory. The reference name is the name of the reference used (in this case "human_ensembl").  RSEM will generate several reference-related files that are prefixed by this name.  This name can contain path info (e.g., "/ref/human_ensembl").
+
+The "--gtf" option tells RSEM to assum that "reference_fasta_file(s)" contains the sequence of a genome, and it will extract transcript reference sequences using the gene annotations specified in the GTF file.
+```
+RSEM_INDEX_DIR=<path to directory where you want the RSEM index files to be saved>
+FASTA=<path to directory containing the hg38 genome files downloaded in Step 1>"/Homo_sapiens.GRCh38.dna.toplevel.fa"
+GTF=<path to directory containing the hg38 genome files downloaded in Step 1>"/Homo_sapiens.GRCh38.102.gtf"
+
+rsem-prepare-reference \
+    --gtf $GTF \
+    $FASTA \
+    $RSEM_INDEX_DIR/human_ensembl
+```
+**Step 4) Revert .bam files:** The downloaded osteo RNA-Seq files have already been processed and aligned. In order to use your own analysis workflow, the files first must be reverted back to their pre-processed and unmapped form. To accomplish this, we first use the Picard function, RevertSam, to take an aligned .bam file and remove alignment information in order to generate an unmapped BAM (uBAM). Details on this part of the workflow can be found in the GATK Tutorial #6484: (How to) Generate an unmapped BAM from FASTQ or aligned BAM. 
 https://gatkforums.broadinstitute.org/gatk/discussion/6484#latest#top
 It removes alignment information and any recalibrated base quality information.  It makes it possible to re-analyze the file using your own pipeline.
 
@@ -70,13 +89,13 @@ java -Xmx8G -jar picard.jar RevertSam \
     REMOVE_ALIGNMENT_INFORMATION=true \
     TMP_DIR=<path to temp directory>/working_temp_rs
 ```
-**Step 4) Mark adapters:** The Picard function, MarkIllumiaAdapters, is used to take an uBAM file and rewrite it with new adapter-trimming tags.  Per tutorial 6483 on the GATK website: https://software.broadinstitute.org/gatk/documentation/article?id=6483 This is needed so that the sequenced adapters contribute minimally to the alignments.  The tool adds an "XT" tag to a read record to mark the 5' start position of the specified adapter sequence.  It also produces a metrics file.
+**Step 5) Mark adapters:** The Picard function, MarkIllumiaAdapters, is used to take an uBAM file and rewrite it with new adapter-trimming tags.  Per tutorial 6483 on the GATK website: https://software.broadinstitute.org/gatk/documentation/article?id=6483 This is needed so that the sequenced adapters contribute minimally to the alignments.  The tool adds an "XT" tag to a read record to mark the 5' start position of the specified adapter sequence.  It also produces a metrics file.
 ```
 #for n lanes
-#The input files are the .bam files created in Step 3.  There are the same number of input .bam files as there are lanes.  
+#The input files are the .bam files created in Step 4.  There are the same number of input .bam files as there are lanes.  
 
 ALIGNMENT_RUN=<Sample ID>
-INPUT=<path to input directory>"/"$ALIGNMENT_RUN"/"<name of .bam file created in step 3>
+INPUT=<path to input directory>"/"$ALIGNMENT_RUN"/"<name of .bam file created in step 4>
 OUTPUT_DIR=<path to output directory>"/"$ALIGNMENT_RUN
 
 java -Xmx8G -jar picard.jar MarkIlluminaAdapters \
@@ -85,7 +104,7 @@ java -Xmx8G -jar picard.jar MarkIlluminaAdapters \
     M=$OUTPUT_DIR/adapter_metrics_lane_<n>.txt \
     TMP_DIR=<path to temp directory>/working_temp_miat
 ```
-**Step 5) Convert uBAM to FASTQ:** The Picard function, SamToFastq, is used to take the uBAM files which have been modifed so that Illumina adapter sequences are marked with the XT tag and converts them to fastq files for further processing.  It produces a .fastq file in which all extant meta data (read group info, alignment info, flags and tags) are purged.  What remains are the read query names prefaced with the @ symbol, read sequences and read base quality scores.  The meta data will be added back later in the MergeBam step.  GATK actually pipes this along with the BWA alignment step and the MergeBam step but I'm still working on piping with Slurm. See Tutorial 6483 for details: 
+**Step 6) Convert uBAM to FASTQ:** The Picard function, SamToFastq, is used to take the uBAM files which have been modifed so that Illumina adapter sequences are marked with the XT tag and converts them to fastq files for further processing.  It produces a .fastq file in which all extant meta data (read group info, alignment info, flags and tags) are purged.  What remains are the read query names prefaced with the @ symbol, read sequences and read base quality scores.  The meta data will be added back later in the MergeBam step.  GATK actually pipes this along with the BWA alignment step and the MergeBam step but I'm still working on piping with Slurm. See Tutorial 6483 for details: 
 https://software.broadinstitute.org/gatk/documentation/article?id=6483
 
 By setting the CLIPPING_ATTRIBUTE to "XT" and by setting the CLIPPING_ACTION to 2, the program effectively removes the previously marked adapter sequences by changing their quality scores to two.  This makes it so they don't contribute to downstream read alignment or alignment scoring metrics.
@@ -107,7 +126,7 @@ java -Xmx8G -jar picard.jar SamToFastq \
     NON_PF=true \
     TMP_DIR=<path to temp directory>/working_temp_stf
 ```
-**Step 6) Trim adapter sequences prior to alignment:** Trimmomatic is a flexibel read trimming tool for Illumina NGS data.  It performs a variety of useful trimming tasks for illumina paired-end and single ended data. See: http://www.usadellab.org/cms/?page=trimmomatic
+**Step 7) Trim adapter sequences prior to alignment:** Trimmomatic is a flexibel read trimming tool for Illumina NGS data.  It performs a variety of useful trimming tasks for illumina paired-end and single ended data. See: http://www.usadellab.org/cms/?page=trimmomatic
 
 The "PE" tells trimmomatic to run in Paired End Mode
 
@@ -150,7 +169,7 @@ java -Xmx48g -Xms48g -Xss2m -jar trimmomatic-0.39.jar PE \
     $OUTPUT4 \
     ILLUMINACLIP:$ADAPTERS:2:30:12
 ```
-**Step 7) Combine lanes prior to STAR alignment:**
+**Step 8) Combine lanes prior to STAR alignment:**
 ```
 ALIGNMENT_RUN=<Sample ID>
 WORKING_DIR=<path to input directory>"/"$ALIGNMENT_RUN
@@ -158,7 +177,7 @@ WORKING_DIR=<path to input directory>"/"$ALIGNMENT_RUN
 cat $WORKING_DIR/R1_*.IlluminaAdapterTrimming.fastq.gz > $WORKING_DIR/R1_all_lanes.fastq.gz
 cat $WORKING_DIR/R2_*.IlluminaAdapterTrimming.fastq.gz > $WORKING_DIR/R2_all_lanes.fastq.gz
 ```
-**Step 8) Align reads with STAR:** 
+**Step 9) Align reads with STAR:** 
 The "quantMode GeneCounts" option will count the number of reads per gene while mapping. A read is counted if it overlaps (1nt or more one and only one gene.  Both ends of the paired-end read are checked for overlaps.  This requires annotations (GTF with -sjdbGTFfile option) used at the genome generation step or at the mapping step.  STAR outputs read counts per gene into ReadsPerGene.out.tab file with 4 columns which correspond to different strandedness options
 - column 1: gene ID
 - column 2: counts for unstranded RNA-seq
@@ -192,4 +211,30 @@ STAR \
     --outFilterMultimapNmax 10 \
     --quantMode TranscriptomeSAM GeneCounts \
     --runThreadN 12
+```
+**Step 10) Estimate gene expression using RSEM:** 
+RSEM (RNA-Seq by Expectation Maximization) is a program for estimating gene and isoform expression levels from RNA-Seq data.  See https://github.com/deweylab/RSEM for details.
+
+RSEM can extract reference transcripts from a genome if you provide it with gene annotations in a GTF/GFF3 file.  Alternatively, you can provide RSEM with transcript sequences directly.
+
+Format: `rsem-calculate-expression [options] --alignments [--paired-end] input reference_name sample_name`
+
+The "input" is the SAM/BAM/CRAM formatted input file.  RSEM requires all alignments of the same read group together.  For paired-end reads, RSEM also requires the two mates of any alignmnet be adjacent. In addition, RSEM does not allow the SEQ and QUAL fields to be empty.
+
+The "reference_name" is the name of the reference used.  This is the output from "rsem-prepare-reference".
+
+The "sample_name" is the name of the sample being analyzed.  All output files are prefixed by this name.
+```
+SAMPLE=<sample name>
+RSEM_INDEX_DIR=<path to directory containing the RSEM index files created in Step 3>
+INPUT_FILE=<path to input directory>"/"$SAMPLE"/STAR_alignedAligned.toTranscriptome.out.bam"
+OUTPUT_PREFIX=<path to output directory>"/"$SAMPLE"/RSEM_expression"
+
+rsem-calculate-expression \
+    --paired-end \
+    --alignments \
+    -p 32 \
+    $INPUT_FILE \
+    $RSEM_INDEX_DIR/human_ensembl \
+    $OUTPUT_PREFIX
 ```
