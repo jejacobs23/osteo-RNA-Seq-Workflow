@@ -41,8 +41,7 @@ STAR \
     --genomeFastaFiles $FASTA \
     --sjdbGTFfile $GTF \
 ```
-**Step 3) Generate the RSEM index files:** 
-RSEM (RNA-Seq by Expectation Maximization) is a program for estimating gene and isoform expression levels from RNA-Seq data.  See https://github.com/deweylab/RSEM for details.
+**Step 3) Generate the RSEM index files:** RSEM (RNA-Seq by Expectation Maximization) is a program for estimating gene and isoform expression levels from RNA-Seq data.  See https://github.com/deweylab/RSEM for details.
 
 RSEM can extract reference transcripts from a genome if you provide it with gene annotations in a GTF/GFF file.  Alternatively, you can provide RSEM with transcript sequences directly.
 
@@ -215,6 +214,8 @@ STAR \
 **Step 10) Estimate gene expression using RSEM:** 
 RSEM (RNA-Seq by Expectation Maximization) is a program for estimating gene and isoform expression levels from RNA-Seq data.  See https://github.com/deweylab/RSEM for details.
 
+Note: This step is not actually neccessary for the differential expression analysis carried out in Steps 11-12.
+
 RSEM can extract reference transcripts from a genome if you provide it with gene annotations in a GTF/GFF3 file.  Alternatively, you can provide RSEM with transcript sequences directly.
 
 Format: `rsem-calculate-expression [options] --alignments [--paired-end] input reference_name sample_name`
@@ -238,3 +239,4 @@ rsem-calculate-expression \
     $RSEM_INDEX_DIR/human_ensembl \
     $OUTPUT_PREFIX
 ```
+**Step 11) Prepare gene count data to be inputed into DESeq2:**  The data from the STAR alignment step will be prepared for input into DESeq2 using the Python program, DESeq2_input.py.  
