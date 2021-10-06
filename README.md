@@ -70,7 +70,7 @@ The "SANITIZE" option removes reads that cause problems for certain tools such a
 
 For paired read files, because each read in a pair has the same query name, they are listed consecutively. We make sure to alter the previous sort order.  Coordinate sorted reads result in the aligner incorrectly estimating insert size from blocks of paired reads as they are not randomly distributed.
 
-I use the "OUTPUT_BY_READGROUP=true" option in order to create a separate file for each readgroup.  This is neccessary because there are two different MarkDuplicate steps (one before merging each readgroup and one after merging).  This ensures that both optical and PCR duplicates are identified (see GATK tutorial 6483) The "MAX_DISCARD_FRACTION" option is informational only.  It does nto affect processing. The "SORT_ORDER=queryname", "RESTORE_ORIGINAL_QUALITIES=true", REMOVE_DUPLICATE_INFORMATION=true" and "REMOVE_ ALIGNMENT_INFORMATION=true" options are all default but I kept them in the code anyway.
+I use the "OUTPUT_BY_READGROUP=true" option in order to create a separate file for each readgroup (see GATK tutorial 6483). The "MAX_DISCARD_FRACTION" option is informational only.  It does nto affect processing. The "SORT_ORDER=queryname", "RESTORE_ORIGINAL_QUALITIES=true", REMOVE_DUPLICATE_INFORMATION=true" and "REMOVE_ ALIGNMENT_INFORMATION=true" options are all default but I kept them in the code anyway.
 ```
 ALIGNMENT_RUN=<Sample ID>
 INPUT=<path to inptu directory>"/"$ALIGNMENT_RUN".RNA-Seq.bam"
@@ -105,7 +105,7 @@ java -Xmx8G -jar picard.jar MarkIlluminaAdapters \
     M=$OUTPUT_DIR/adapter_metrics_lane_<n>.txt \
     TMP_DIR=<path to temp directory>/working_temp_miat
 ```
-**Step 6) Convert uBAM to FASTQ:** The Picard function, SamToFastq, is used to take the uBAM files which have been modifed so that Illumina adapter sequences are marked with the XT tag and converts them to fastq files for further processing.  It produces a .fastq file in which all extant meta data (read group info, alignment info, flags and tags) are purged.  What remains are the read query names prefaced with the @ symbol, read sequences and read base quality scores.  The meta data will be added back later in the MergeBam step.  GATK actually pipes this along with the BWA alignment step and the MergeBam step but I'm still working on piping with Slurm. See Tutorial 6483 for details: 
+**Step 6) Convert uBAM to FASTQ:** The Picard function, SamToFastq, is used to take the uBAM files which have been modifed so that Illumina adapter sequences are marked with the XT tag and converts them to fastq files for further processing.  It produces a .fastq file in which all extant meta data (read group info, alignment info, flags and tags) are purged.  What remains are the read query names prefaced with the @ symbol, read sequences and read base quality scores.  See Tutorial 6483 for details: 
 https://software.broadinstitute.org/gatk/documentation/article?id=6483
 
 By setting the CLIPPING_ATTRIBUTE to "XT" and by setting the CLIPPING_ACTION to 2, the program effectively removes the previously marked adapter sequences by changing their quality scores to two.  This makes it so they don't contribute to downstream read alignment or alignment scoring metrics.
