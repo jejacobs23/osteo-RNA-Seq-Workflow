@@ -1,10 +1,10 @@
 #!/usr/bin/bash
 #SBATCH --mail-type=ALL,TIME_LIMIT
-#SBATCH --mail-user=jacojam@ohsu.edu
-#SBATCH -A jjacobs
+#SBATCH --mail-user=<email address>
+#SBATCH -A <Slurm Username>
 #SBATCH --time=1-12:00:00
-#SBATCH --error=/home/exacloud/lustre1/jjacobs/osteo_logs/stderr.Trimmomatic_%j
-#SBATCH --output=/home/exacloud/lustre1/jjacobs/osteo_logs/stout.Trimmomatic_%j
+#SBATCH --error=<pathway to directory for workflow logs>/stderr.Trimmomatic_%j
+#SBATCH --output=<pathway to directory for workflow logs>/stout.Trimmomatic_%j
 
 #Trimmomatic is a flexibel read trimming tool for Illumina NGS data.  It performs a variety of useful
 #trimming tasks for illumina paired-end and single ended data. See:
@@ -31,25 +31,14 @@
 #The numbers following "ILLUMINACLIP" are as followes - :2:30:12, which means 2 seed
 #mismatches:30 palindrome clip threshold: 12 simple clip threshold.  
 #
-#Originally tried to split this up into array jobs but it
-#kept erroring out due to memory constraints.  Maybe try using scratch space?
 #
-#lanes=(01 02 03 04 05 06)
 lanes=(1)
 ID="12_M"
-#ID="RNA140728LD_LD5_151"
-#ID="RNA140728LD_5_PCB429"
-#ID="RNA140728LD_6_PCB439"
-#TAG="ACAGTG"
-#TAG="TGACCA"
-#RUN="L006"
 SAMPLE_NAME="SJOS0"$ID
-#SAMPLE_NAME="Sample_"$ID
 
-COM_DIR="/home/exacloud/lustre1/jjacobs"
-Trimmo_DIR=$COM_DIR"/programs/Trimmomatic-0.39"
+Trimmo_DIR=<path to Trimmomatic directory>
 ADAPTERS=$Trimmo_DIR/adapters/TruSeq3-PE.fa
-WORKING_DIR=$COM_DIR"/data/osteo/RNA-Seq/"$SAMPLE_NAME
+WORKING_DIR=<path to input directory>"/"$SAMPLE_NAME
 TRIMLOG=$WORKING_DIR"/Trimlog.txt"
 
 for i in "${lanes[@]}"; do
