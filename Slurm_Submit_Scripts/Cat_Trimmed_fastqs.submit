@@ -1,0 +1,15 @@
+#!/usr/bin/bash
+#SBATCH --mail-type=ALL,TIME_LIMIT
+#SBATCH --mail-user=jacojam@ohsu.edu
+#SBATCH -A jjacobs
+#SBATCH --time=1-12:00:00
+#SBATCH --error=/home/exacloud/lustre1/jjacobs/osteo_logs/stderr.Cat_Trimmed_fastqs_%j
+#SBATCH --output=/home/exacloud/lustre1/jjacobs/osteo_logs/stout.Cat_Trimmed_fastqs_%j
+#
+SAMPLE=$1
+
+COM_DIR="/home/exacloud/lustre1/jjacobs"
+WORKING_DIR=$COM_DIR"/data/osteo/RNA-Seq/"$SAMPLE
+
+srun cat $WORKING_DIR/R1_*.IlluminaAdapterTrimming.fastq.gz > $WORKING_DIR/R1_all_lanes.fastq.gz
+srun cat $WORKING_DIR/R2_*.IlluminaAdapterTrimming.fastq.gz > $WORKING_DIR/R2_all_lanes.fastq.gz
