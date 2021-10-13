@@ -1,0 +1,15 @@
+#!/usr/bin/bash
+#SBATCH --mail-type=ALL,TIME_LIMIT
+#SBATCH --mail-user=jacojam@ohsu.edu
+#SBATCH -A jjacobs
+#SBATCH --time=1-12:00:00
+#SBATCH --error=/home/groups/jjacobs/osteo_logs/stderr.DESeq2_input_%j
+#SBATCH --output=/home/groups/jjacobs/osteo_logs/stout.DESeq2_input_%j
+
+#
+
+COM_DIR="/home/groups/jjacobs"
+PYTHON_PROGRAM_DIR=$COM_DIR"/submit_scripts/osteo_Workflow/python"
+
+srun python $PYTHON_PROGRAM_DIR/DESeq2_input.py
+
