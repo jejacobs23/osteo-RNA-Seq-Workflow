@@ -1,0 +1,29 @@
+#!/usr/bin/bash
+#SBATCH --mail-type=ALL,TIME_LIMIT
+#SBATCH --mail-user=<email address>
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mincpus=32
+#SBATCH --mem-per-cpu=8G
+#SBATCH -A <Slurm Username>
+#SBATCH --qos long_jobs
+#SBATCH --time=10-00:00:00
+#SBATCH --error=/home/exacloud/lustre1/jjacobs/osteo_logs/stderr.STAR_genomeGenerate
+#SBATCH --output=/home/exacloud/lustre1/jjacobs/osteo_logs/stout.STAR_genomeGenerate
+
+#STAR run with the "GenomeGenerate" mode will take the user supplied reference geneome sequences
+#(FASTA files) and annotations (GTF file) and generate genome indexes that are utilized in the
+#mapping step.  The genome indexes are saved to disk and need only be generated once for each 
+#genome/annotation combination.  
+
+GENOME_DIR=<path to STAR index directories>"/hg38_osteo_ensembl"
+FASTA=<path to fasta directory>"/Homo_sapiens.GRCh38.dna.toplevel.fa"
+GTF=<path to gtf directory>"/Homo_sapiens.GRCh38.102.gtf"
+
+srun <path to STAR directory>/STAR \
+    --runThreadN 32 \
+    --runMode genomeGenerate \
+    --limitGenomeGenerateRAM 170000000000 \
+    --genomeDir $GENOME_DIR \
+    --genomeFastaFiles $FASTA \
+    --sjdbGTFfile $GTF \
