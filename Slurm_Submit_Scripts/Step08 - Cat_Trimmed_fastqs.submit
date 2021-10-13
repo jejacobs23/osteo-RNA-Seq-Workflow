@@ -1,0 +1,14 @@
+#!/usr/bin/bash
+#SBATCH --mail-type=ALL,TIME_LIMIT
+#SBATCH --mail-user=<email address>
+#SBATCH -A <Slurm Username>
+#SBATCH --time=1-12:00:00
+#SBATCH --error=<pathway to directory for workflow logs>/stderr.Cat_Trimmed_fastqs_%j
+#SBATCH --output=<pathway to directory for workflow logs>/stout.Cat_Trimmed_fastqs_%j
+#
+SAMPLE=<Sample ID>
+
+WORKING_DIR=<path to input directory>"/"$SAMPLE
+
+srun cat $WORKING_DIR/R1_*.IlluminaAdapterTrimming.fastq.gz > $WORKING_DIR/R1_all_lanes.fastq.gz
+srun cat $WORKING_DIR/R2_*.IlluminaAdapterTrimming.fastq.gz > $WORKING_DIR/R2_all_lanes.fastq.gz
