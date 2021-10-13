@@ -1,0 +1,42 @@
+#!/usr/bin/bash
+#SBATCH --mail-type=ALL,TIME_LIMIT
+#SBATCH --mail-user=jacojam@ohsu.edu
+#SBATCH -A jjacobs
+#SBATCH --time=1-12:00:00
+#SBATCH --error=/home/exacloud/lustre1/jjacobs/osteo_logs/stderr.RSEM_prepare-reference
+#SBATCH --output=/home/exacloud/lustre1/jjacobs/osteo_logs/stout.RSEM_prepare-reference
+
+#RSEM (RNA-Seq by Expectation Maximization) is a program for extimating gene and isoform expression levels
+#from RNA-Seq data.  See https://github.com/deweylab/RSEM for details.
+#
+#RSEM can extract reference transcripts from a genome if you provide it with gene annotations in a GTF/GFF3
+#file.  Alternatively, you can provide RSEM with transcript sequences directly.
+#
+#The reference_fasta_file(s) is provided as either a comma-separated list of Multi-FASTA formatted files OR
+#a directory name.  If a directory name is specified, RSEM will read all files with suffix .fa or .fasta in
+#this directory.
+#The reference name is the name of the reference used (in this case "human_ensembl").  RSEM will generate
+#several reference-related files that are prefixed by this name.  This name can contain path info (e.g., 
+#"/ref/human_ensembl").  
+#
+#The "--gtf" option tells RSEM to assum that "reference_fasta_file(s)" contains the sequence of a genome,
+#and it will extract transcript reference sequences using the gene annotations specified in the GTF file.
+#
+
+#Open Questions:
+#  1. What's the difference in output if you first align with STAR, then use the STAR output as input to
+#     RSEM vs. if you simply input the reads to RSEM and indicate you want to use STAR as the aligner?
+#  2. Should I have compiled my STAR reference using the .fa file generated from RSEM?
+#  3. Can I just use the STAR index files I've already created using STAR?
+
+COM_DIR="/home/exacloud/lustre1/jjacobs"
+RSEM_DIR=$COM_DIR"/programs/RSEM/RSEM-1.3.3"
+RSEM_INDEX_DIR=$COM_DIR"/RSEM_indexes/hg38_osteo_ensembl"
+
+FASTA=$COM_DIR"/Ensembl_Downloads/GRCh38.p13/Homo_sapiens.GRCh38.dna.toplevel.fa"
+GTF=$COM_DIR"/Ensembl_Downloads/GRCh38.p13/Homo_sapiens.GRCh38.102.gtf"
+
+srun $RSEM_DIR/rsem-prepare-reference \
+    --gtf $GTF \
+    $FASTA \
+    $RSEM_INDEX_DIR/human_ensembl
