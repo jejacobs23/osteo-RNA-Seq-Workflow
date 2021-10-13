@@ -8,8 +8,8 @@
 #SBATCH -A <Slurm Username>
 #SBATCH --qos long_jobs
 #SBATCH --time=10-00:00:00
-#SBATCH --error=/home/exacloud/lustre1/jjacobs/osteo_logs/stderr.STAR_genomeGenerate
-#SBATCH --output=/home/exacloud/lustre1/jjacobs/osteo_logs/stout.STAR_genomeGenerate
+#SBATCH --error=<pathway to directory for workflow logs>/stderr.STAR_genomeGenerate
+#SBATCH --output=<pathway to directory for workflow logs>/stout.STAR_genomeGenerate
 
 #STAR run with the "GenomeGenerate" mode will take the user supplied reference geneome sequences
 #(FASTA files) and annotations (GTF file) and generate genome indexes that are utilized in the
