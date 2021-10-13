@@ -1,10 +1,10 @@
 #!/usr/bin/bash
 #SBATCH --mail-type=ALL,TIME_LIMIT
-#SBATCH --mail-user=jacojam@ohsu.edu
-#SBATCH -A jjacobs
+#SBATCH --mail-user=<email address>
+#SBATCH -A <Slurm Username>
 #SBATCH --time=1-12:00:00
-#SBATCH --error=/home/exacloud/lustre1/jjacobs/osteo_logs/stderr.RSEM_prepare-reference
-#SBATCH --output=/home/exacloud/lustre1/jjacobs/osteo_logs/stout.RSEM_prepare-reference
+#SBATCH --error=<pathway to directory for workflow logs>/stderr.RSEM_prepare-reference
+#SBATCH --output=<pathway to directory for workflow logs>/stout.RSEM_prepare-reference
 
 #RSEM (RNA-Seq by Expectation Maximization) is a program for extimating gene and isoform expression levels
 #from RNA-Seq data.  See https://github.com/deweylab/RSEM for details.
@@ -23,20 +23,12 @@
 #and it will extract transcript reference sequences using the gene annotations specified in the GTF file.
 #
 
-#Open Questions:
-#  1. What's the difference in output if you first align with STAR, then use the STAR output as input to
-#     RSEM vs. if you simply input the reads to RSEM and indicate you want to use STAR as the aligner?
-#  2. Should I have compiled my STAR reference using the .fa file generated from RSEM?
-#  3. Can I just use the STAR index files I've already created using STAR?
+RSEM_INDEX_DIR=<path to RSEM index directories>"/hg38_osteo_ensembl"
 
-COM_DIR="/home/exacloud/lustre1/jjacobs"
-RSEM_DIR=$COM_DIR"/programs/RSEM/RSEM-1.3.3"
-RSEM_INDEX_DIR=$COM_DIR"/RSEM_indexes/hg38_osteo_ensembl"
+FASTA=<path to fasta directory>"/Homo_sapiens.GRCh38.dna.toplevel.fa"
+GTF=<path to gtf directory>"/Homo_sapiens.GRCh38.102.gtf"
 
-FASTA=$COM_DIR"/Ensembl_Downloads/GRCh38.p13/Homo_sapiens.GRCh38.dna.toplevel.fa"
-GTF=$COM_DIR"/Ensembl_Downloads/GRCh38.p13/Homo_sapiens.GRCh38.102.gtf"
-
-srun $RSEM_DIR/rsem-prepare-reference \
+srun <path to RSEM directory>/rsem-prepare-reference \
     --gtf $GTF \
     $FASTA \
     $RSEM_INDEX_DIR/human_ensembl
