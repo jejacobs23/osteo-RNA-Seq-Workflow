@@ -1,0 +1,43 @@
+#!/usr/bin/bash
+#SBATCH --mail-type=ALL,TIME_LIMIT
+#SBATCH --mail-user=<email address>
+#SBATCH -A <Slurm Username>
+#SBATCH --time=1-12:00:00
+#SBATCH --mem-per-cpu=8G
+#SBATCH -a 1
+#SBATCH --error=<pathway to directory for workflow logs>/stderr.SamToFastq_%j_%a
+#SBATCH --output=<pathway to directory for workflow logs>/stout.SamToFastq_%j_%a
+
+#This submit script uses the program picard and the function, SamToFastq, to take the uBAM files 
+#which have been modifed so that Illumina adapter sequences are marked with the XT tag and converts them
+#to fastq files for further processing.  It produces a .fastq file in which all extant meta data (read group
+#info, alignment info, flags and tags) are purged.  What remains are the read query names prefaced with the
+#@ symbol, read sequences and read base quality scores.  See Tutorial 6483 for details:
+#https://software.broadinstitute.org/gatk/documentation/article?id=6483
+#
+#By setting the CLIPPING_ATTRIBUTE to "XT" and by setting the CLIPPING_ACTION to 2, the program effectively
+#removes the previously marked adapter sequences by changing their quality scores to two.  This makes it
+#so they don't contribute to downstream read alignment or alignment scoring metrics. 
+#
+#The NON_PF=true option is set per the GATK tutorial.  This tells the program to retain reads marked with
+#the 0x200 flag bit that denotes reads that do not pass quality controls (reads failing platform or vendor
+#quality checks).
+#
+
+NLANES=1
+rns=(SJOS012_M)
+
+ALIGNMENT_RUN=${rns[$(((${SLURM_ARRAY_TASK_ID}-1)/$NLANES))]}
+
+INPUT=<path to input directory>"/"$ALIGNMENT_RUN"/uBAM_markedAdapters_lane_$((((${SLURM_ARRAY_TASK_ID}-1)%$NLANES)+1)).bam"
+
+OUTPUT_DIR=<path to output directory>"/"$ALIGNMENT_RUN
+
+srun /usr/bin/java -Xmx8G -jar <path to Picard directory>/picard.jar SamToFastq \
+I=$INPUT \
+FASTQ=$OUTPUT_DIR/R1_lane_$((((${SLURM_ARRAY_TASK_ID}-1)%$NLANES)+1)).fastq \
+SECOND_END_FASTQ=$OUTPUT_DIR/R2_lane_$((((${SLURM_ARRAY_TASK_ID}-1)%$NLANES)+1)).fastq \
+CLIPPING_ATTRIBUTE=XT \
+CLIPPING_ACTION=2 \
+NON_PF=true \
+TMP_DIR=<path to temp directory>/working_temp_stf_${SLURM_ARRAY_TASK_ID}
