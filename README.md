@@ -14,13 +14,13 @@ Workflow for estimating gene expression in osteosarcoma RNA sequencing (RNA-Seq)
 
 # Workflow
 **Notes:**
-- Each sample has it's own directory for output files.  Each individual directory is labeled by the "Sample ID"
+- Each sample has its own directory for output files.  Each individual directory is labeled by the "Sample ID"
 
 **Step 1) Download the hg38 genome files:** The following files were downloaded from Ensembl on 12/9/2020 and were saved to a directory named "GRCh38.p13"
 - Homo_sapiens.GRCh38.dna.toplevel.fa.gz (ftp://ftp.ensembl.org/pub/release-102/fasta/homo_sapiens/dna/)
 - Homo_sapiens.GRCh38.102.gtf.gz (ftp://ftp.ensembl.org/pub/release-102/fasta/homo_sapiens/dna/)
 
-The Toplevel .fa file (Homo_sapiens.GRCh38.dna.toplevel.fa.gz) contains all sequence regions flagged as toplevel in an Ensembl schema. This includes chromsomes, regions not assembled into chromosomes and N padded haplotype/patch regions.
+The Toplevel .fa file (Homo_sapiens.GRCh38.dna.toplevel.fa.gz) contains all sequence regions flagged as toplevel in an Ensembl schema. This includes chromosomes, regions not assembled into chromosomes and N padded haplotype/patch regions.
 
 The .gtf file (Homo_sapiens.GRCh38.102.gtf.gz): The associated README file does not explain all the different .gtf options so I chose the one that seemed consistent with the .fa file
 
@@ -29,7 +29,7 @@ Both files were then unzipped as follows:
 gunzip Homo_sapiens.GRCh38.dna.toplevel.fa.gz
 gunzip Homo_sapiens.GRCh38.102.gtf.gz
 ```
-**Step 2) Generate the STAR genome index files:** STAR run with the "GenomeGenerate" mode will take the user supplied reference geneome sequences (FASTA files) and annotations (GTF file) and generate genome indexes that are utilized in the mapping step.  The genome indexes are saved to disk and need only be generated once for each genome/annotation combination.
+**Step 2) Generate the STAR genome index files:** STAR run with the "GenomeGenerate" mode will take the user supplied reference genome sequences (FASTA files) and annotations (GTF file) and generate genome indexes that are utilized in the mapping step.  The genome indexes are saved to disk and need only be generated once for each genome/annotation combination.
 ```
 GENOME_DIR=<path to directory where you want the STAR index files to be saved>
 FASTA=<path to directory containing the hg38 genome files downloaded in Step 1>"/Homo_sapiens.GRCh38.dna.toplevel.fa"
@@ -49,7 +49,7 @@ RSEM can extract reference transcripts from a genome if you provide it with gene
 
 The reference_fasta_file(s) is provided as either a comma-separated list of Multi-FASTA formatted files OR a directory name.  If a directory name is specified, RSEM will read all files with suffix .fa or .fasta in this directory. The reference name is the name of the reference used (in this case "human_ensembl").  RSEM will generate several reference-related files that are prefixed by this name.  This name can contain path info (e.g., "/ref/human_ensembl").
 
-The "--gtf" option tells RSEM to assum that "reference_fasta_file(s)" contains the sequence of a genome, and it will extract transcript reference sequences using the gene annotations specified in the GTF file.
+The "--gtf" option tells RSEM to assume that "reference_fasta_file(s)" contains the sequence of a genome, and it will extract transcript reference sequences using the gene annotations specified in the GTF file.
 ```
 RSEM_INDEX_DIR=<path to directory where you want the RSEM index files to be saved>
 FASTA=<path to directory containing the hg38 genome files downloaded in Step 1>"/Homo_sapiens.GRCh38.dna.toplevel.fa"
@@ -66,14 +66,14 @@ It removes alignment information and any recalibrated base quality information. 
 
 Standard tags cleared by default are NM, UQ, PG, MD, MQ, SA, MC and AS.  Additionally, the OQ tag is removed by the default "RESTORE_ORIGINAL_QUALITIES" parameter.  Any nonstandard tags should be removed.  To list all tags within a BAM, use the command: `samtools view input.bam | cut -f 12- | tr '\t' '\n' | cut -d ':' -f 1 | awk '{ if(!x[$1]++) { print }}'` You should leave the RG tag.
 
-The "SANITIZE" option removes reads that cause problems for certain tools such as MarkIlluminaAdapters. It removeds paired reads with missing mates, duplicate records and records with mismatches in length of bases and qualities.
+The "SANITIZE" option removes reads that cause problems for certain tools such as MarkIlluminaAdapters. It removes paired reads with missing mates, duplicate records and records with mismatches in length of bases and qualities.
 
 For paired read files, because each read in a pair has the same query name, they are listed consecutively. We make sure to alter the previous sort order.  Coordinate sorted reads result in the aligner incorrectly estimating insert size from blocks of paired reads as they are not randomly distributed.
 
-I use the "OUTPUT_BY_READGROUP=true" option in order to create a separate file for each readgroup (see GATK tutorial 6483). The "MAX_DISCARD_FRACTION" option is informational only.  It does nto affect processing. The "SORT_ORDER=queryname", "RESTORE_ORIGINAL_QUALITIES=true", REMOVE_DUPLICATE_INFORMATION=true" and "REMOVE_ ALIGNMENT_INFORMATION=true" options are all default but I kept them in the code anyway.
+I use the "OUTPUT_BY_READGROUP=true" option in order to create a separate file for each readgroup (see GATK tutorial 6483). The "MAX_DISCARD_FRACTION" option is informational only.  It does not affect processing. The "SORT_ORDER=queryname", "RESTORE_ORIGINAL_QUALITIES=true", REMOVE_DUPLICATE_INFORMATION=true" and "REMOVE_ ALIGNMENT_INFORMATION=true" options are all default but I kept them in the code anyway.
 ```
 ALIGNMENT_RUN=<Sample ID>
-INPUT=<path to inptu directory>"/"$ALIGNMENT_RUN".RNA-Seq.bam"
+INPUT=<path to input directory>"/"$ALIGNMENT_RUN".RNA-Seq.bam"
 OUTPUT_DIR=<path to output directory>"/"$ALIGNMENT_RUN
 
 java -Xmx8G -jar picard.jar RevertSam \
@@ -105,7 +105,7 @@ java -Xmx8G -jar picard.jar MarkIlluminaAdapters \
     M=$OUTPUT_DIR/adapter_metrics_lane_<n>.txt \
     TMP_DIR=<path to temp directory>/working_temp_miat
 ```
-**Step 6) Convert uBAM to FASTQ:** The Picard function, SamToFastq, is used to take the uBAM files which have been modifed so that Illumina adapter sequences are marked with the XT tag and converts them to fastq files for further processing.  It produces a .fastq file in which all extant meta data (read group info, alignment info, flags and tags) are purged.  What remains are the read query names prefaced with the @ symbol, read sequences and read base quality scores.  See Tutorial 6483 for details: 
+**Step 6) Convert uBAM to FASTQ:** The Picard function, SamToFastq, is used to take the uBAM files which have been modified so that Illumina adapter sequences are marked with the XT tag and converts them to fastq files for further processing.  It produces a .fastq file in which all extant meta data (read group info, alignment info, flags and tags) are purged.  What remains are the read query names prefaced with the @ symbol, read sequences and read base quality scores.  See Tutorial 6483 for details: 
 https://software.broadinstitute.org/gatk/documentation/article?id=6483
 
 By setting the CLIPPING_ATTRIBUTE to "XT" and by setting the CLIPPING_ACTION to 2, the program effectively removes the previously marked adapter sequences by changing their quality scores to two.  This makes it so they don't contribute to downstream read alignment or alignment scoring metrics.
@@ -127,7 +127,7 @@ java -Xmx8G -jar picard.jar SamToFastq \
     NON_PF=true \
     TMP_DIR=<path to temp directory>/working_temp_stf
 ```
-**Step 7) Trim adapter sequences prior to alignment:** Trimmomatic is a flexibel read trimming tool for Illumina NGS data.  It performs a variety of useful trimming tasks for illumina paired-end and single ended data. See: http://www.usadellab.org/cms/?page=trimmomatic
+**Step 7) Trim adapter sequences prior to alignment:** Trimmomatic is a flexible read trimming tool for Illumina NGS data.  It performs a variety of useful trimming tasks for illumina paired-end and single ended data. See: http://www.usadellab.org/cms/?page=trimmomatic
 
 The "PE" tells trimmomatic to run in Paired End Mode
 
@@ -140,9 +140,9 @@ The "trimlog file" creates a log of all read trimmings, indicating the following
 
 The "-phred33" option tells Trimmomatic to use phred33 instead of phred64.  Most newer sequencing data is phred33.  If you see symbols like #, !, $, % or any numbers, you know you've got phred33.
 
-For paired-end data, two input filres are specified, and 4 output files, 2 for the 'paired' output where both reads survivied the processing and 2 for corresponding 'unpaired' output where a read survivied, but the partner read did not.
+For paired-end data, two input files are specified, and 4 output files, 2 for the 'paired' output where both reads survived the processing and 2 for corresponding 'unpaired' output where a read survived, but the partner read did not.
 
-The "ILLUMINACLIP" command cuts adapter and other illumina sequences from the read. The numbers following "ILLUMINACLIP" are as followes - :2:30:12, which means 2 seed mismatches:30 palindrome clip threshold: 12 simple clip threshold.
+The "ILLUMINACLIP" command cuts adapter and other illumina sequences from the read. The numbers following "ILLUMINACLIP" are as follows - :2:30:12, which means 2 seed mismatches:30 palindrome clip threshold: 12 simple clip threshold.
 ```
 #For n lanes
 
@@ -185,7 +185,7 @@ The "quantMode GeneCounts" option will count the number of reads per gene while 
 - column 3: counts for the 1st read strand aligned with RNA (htseq-count option -s yes)
 - column 4: counts for the 2nd read strand aligned with RNA (htseq-count option -s reverse)
 
-The "--quantMode TranscriptomeSAM" options tells STAR to output alignments translated into transcript coordinates in the Aligned.toTranscriptome.out.bam file (in addition to alignmgnets in genomic coordinates in Aligned.sam/bam files).  These transcriptomic alignments can be used with various transcript quantification software that require reads to be mapped to transcriptome, such as RSEM or eXpress.  For example, RSEM command line would look like this:
+The "--quantMode TranscriptomeSAM" options tells STAR to output alignments translated into transcript coordinates in the Aligned.toTranscriptome.out.bam file (in addition to alignments in genomic coordinates in Aligned.sam/bam files).  These transcriptomic alignments can be used with various transcript quantification software that require reads to be mapped to transcriptome, such as RSEM or eXpress.  For example, RSEM command line would look like this:
 ```
     rsem-calculate-expression . . . --bam Aligned.toTranscriptome.out.bam
     /path/to/RSEM/reference RSEM
@@ -216,13 +216,13 @@ STAR \
 **Step 10) Estimate gene expression using RSEM:** 
 RSEM (RNA-Seq by Expectation Maximization) is a program for estimating gene and isoform expression levels from RNA-Seq data.  See https://github.com/deweylab/RSEM for details.
 
-Note: This step is not actually neccessary for the differential expression analysis carried out in Steps 11-12.
+Note: This step is not actually necessary for the differential expression analysis carried out in Steps 11-12.
 
 RSEM can extract reference transcripts from a genome if you provide it with gene annotations in a GTF/GFF3 file.  Alternatively, you can provide RSEM with transcript sequences directly.
 
 Format: `rsem-calculate-expression [options] --alignments [--paired-end] input reference_name sample_name`
 
-The "input" is the SAM/BAM/CRAM formatted input file.  RSEM requires all alignments of the same read group together.  For paired-end reads, RSEM also requires the two mates of any alignmnet be adjacent. In addition, RSEM does not allow the SEQ and QUAL fields to be empty.
+The "input" is the SAM/BAM/CRAM formatted input file.  RSEM requires all alignments of the same read group together.  For paired-end reads, RSEM also requires the two mates of any alignment be adjacent. In addition, RSEM does not allow the SEQ and QUAL fields to be empty.
 
 The "reference_name" is the name of the reference used.  This is the output from "rsem-prepare-reference".
 
@@ -241,6 +241,6 @@ rsem-calculate-expression \
     $RSEM_INDEX_DIR/human_ensembl \
     $OUTPUT_PREFIX
 ```
-**Step 11) Prepare gene count data to be inputed into DESeq2:**  The data from the STAR alignment step will be prepared for input into DESeq2 using the Python program, DESeq2_input.py.  
+**Step 11) Prepare gene count data to be inputted into DESeq2:**  The data from the STAR alignment step will be prepared for input into DESeq2 using the Python program, DESeq2_input.py.  
 
 **Step 12) Identify differentially expressed genes between samples with and without nuclear envelope or nuclear pore complex pathway aberrations:**  The R program, DESeq2_Analysis.R, is used to identify differentially expressed genes using DESeq2.  
