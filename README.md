@@ -179,7 +179,7 @@ cat $WORKING_DIR/R1_*.IlluminaAdapterTrimming.fastq.gz > $WORKING_DIR/R1_all_lan
 cat $WORKING_DIR/R2_*.IlluminaAdapterTrimming.fastq.gz > $WORKING_DIR/R2_all_lanes.fastq.gz
 ```
 **Step 9) Align reads with STAR:** 
-The "quantMode GeneCounts" option will count the number of reads per gene while mapping. A read is counted if it overlaps (1nt or more one and only one gene.  Both ends of the paired-end read are checked for overlaps.  This requires annotations (GTF with -sjdbGTFfile option) used at the genome generation step or at the mapping step.  STAR outputs read counts per gene into ReadsPerGene.out.tab file with 4 columns which correspond to different strandedness options
+The "quantMode GeneCounts" option will count the number of reads per gene while mapping. A read is counted if it overlaps (1nt or more) one and only one gene.  Both ends of the paired-end read are checked for overlaps.  This requires annotations (GTF with -sjdbGTFfile option) used at the genome generation step or at the mapping step.  STAR outputs read counts per gene into ReadsPerGene.out.tab file with 4 columns which correspond to different strandedness options
 - column 1: gene ID
 - column 2: counts for unstranded RNA-seq
 - column 3: counts for the 1st read strand aligned with RNA (htseq-count option -s yes)
